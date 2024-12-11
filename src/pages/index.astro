@@ -1,0 +1,73 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+    <div class="container">
+        <h1>WEBMOTE</h1>
+        <label for="idInput">
+            <input type="number" id="idInput" placeholder="접속번호를 입력하세요" maxlength="6">
+            <br>
+        </label>
+
+        <button id="start">시작!</button>
+    </div>
+
+    <script>
+        const btn = document.getElementById('start')!
+        btn.addEventListener('click', () => {
+            const id = document.getElementById('idInput')!.value;
+            if (id.length === 6 && !isNaN(id)) {
+                window.location.href = `/control?id=${id}`;
+            } else {
+                alert('접속번호가 유효하지 않습니다.');
+            }
+        })
+    </script>
+</Layout>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .container {
+        text-align: center;
+        background-color: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+    }
+
+    input {
+        font-size: 1.125rem; /* 18px */
+        padding: 0.625rem; /* 10px */
+        width: 12.5rem; /* 200px */
+        margin-bottom: 1.25rem; /* 20px */
+        border: 1px solid #ccc;
+        border-radius: 0.25rem;
+        text-align: center;
+    }
+
+    button {
+        font-size: 1rem; /* 16px */
+        padding: 0.625rem 1.25rem; /* 10px 20px */
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #555;
+    }
+</style>

@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+
+<Layout>
+    <div id="circle"></div>
+    <script>
+        const circle = document.getElementById('circle')!;
+
+
+        const SVR_ADDR = "127.0.0.1:8000"
+        const localWs = new WebSocket(`wss://${SVR_ADDR}/ws/111111`);
+
+
+        let x = 0;
+        let y = 0;
+
+        localWs.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            console.log(data.x, data.y);
+
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const circleWidth = circle.offsetWidth;
+            const circleHeight = circle.offsetHeight;
+
+            x = data.x / 1000 * windowWidth;
+            y = data.y / 1000 * windowHeight;
+            if (x + circleWidth > windowWidth) {
+                x = windowWidth - circleWidth / 2;
+            }
+            if (y + circleHeight > windowHeight) {
+                y = windowHeight - circleHeight / 2;
+            }
+
+            if (x < 0) {
+                x = 0;
+            }
+            if (y < 0) {
+                y = 0;
+            }
+
+
+            circle.style.left = x + 'px';
+            circle.style.top = y + 'px';
+        }
+
+
+        // let x = 0;
+        // let y = 0;
+        // let dx = 5; // x축 이동량
+        // let dy = 3; // y축 이동량
+        // function moveCircle() {
+        //     const windowWidth = window.innerWidth;
+        //     const windowHeight = window.innerHeight;
+        //     const circleWidth = circle.offsetWidth;
+        //     const circleHeight = circle.offsetHeight;
+        //
+        //     // 경계 검사 및 방향 전환
+        //     if (x + circleWidth > windowWidth || x < 0) {
+        //         dx = -dx;
+        //     }
+        //     if (y + circleHeight > windowHeight || y < 0) {
+        //         dy = -dy;
+        //     }
+        //
+        //     x += dx;
+        //     y += dy;
+        //
+        //     circle.style.left = x + 'px';
+        //     circle.style.top = y + 'px';
+        // }
+        //
+        // setInterval(moveCircle, 10); // 10ms마다 moveCircle 함수 실행
+    </script>
+</Layout>
+
+<style>
+    #circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: blue;
+        position: absolute;
+    }
+</style>

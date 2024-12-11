@@ -1,0 +1,17 @@
+.toggle {
+  width: 10rem;
+  height: 2rem;
+}
+
+.calib {
+  margin: 1rem;
+  width: 20rem;
+  height: 5rem;
+}
+
+.center_div {
+  flex-direction: column;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

@@ -1,0 +1,243 @@
+---
+import Layout from '@/layouts/Layout.astro';
+---
+
+<Layout>
+    <div class="container">
+        <h1>WEBMOTE</h1>
+        <div class="idDisplay">
+            접속 번호 : <span id="accessId"></span>
+        </div>
+        <div class="idDisplay">
+            <button class="button2" id="left">왼쪽</button>
+            <button class="button2" id="right">오른쪽</button>
+        </div>
+        <button class="button" id="btn">접속중</button>
+    </div>
+
+    <script>
+        // URL에서 ID 값을 추출하여 페이지에 표시
+        const urlParams = new URLSearchParams(window.location.search);
+        const accessId = urlParams.get('id');
+        if (!accessId) {
+            window.location.href = `/`;
+        }
+        document.getElementById('accessId')!.textContent = accessId;
+
+        const button = document.getElementById('btn')!;
+        let dotCount = 0;
+        const updateDot = () => {
+            button.textContent = `접속중${'.'.repeat(dotCount)}`;
+            dotCount = dotCount < 3 ? dotCount + 1 : 0;
+        };
+
+        const intervalId = setInterval(updateDot, 500);
+        let alpha = 0;
+        let beta = 0;
+        let gamma = 0;
+
+        const socketUrl = `wss://${window.location.host}/ws/${accessId}`;
+        const socket = new WebSocket(socketUrl);
+
+        socket.onopen = function () {
+            clearInterval(intervalId);
+            button.textContent = `발사!`;
+        };
+
+        socket.onerror = function (error) {
+            console.error('Error: ', error);
+            button.textContent = '접속 실패';
+        };
+
+        socket.onclose = function () {
+            console.log('connection closed.');
+            button.textContent = '접속 종료';
+        };
+
+        function handleOrientation(e: DeviceOrientationEvent) {
+            alpha = e.alpha!;
+            beta = e.beta!;
+            gamma = e.gamma!;
+            if (socket.OPEN) {
+                socket.send(JSON.stringify({
+                    "event": "data",
+                    "data": {
+                        "alpha": alpha,
+                        "beta": beta,
+                        "gamma": gamma,
+                    }
+                }));
+            }
+        }
+
+        function calibrate(c: number) {
+            let e = "lt";
+            if (c == 2) {
+                e = "rt";
+            } else if (c == 3) {
+                e = "lb";
+            } else if (c == 4) {
+                e = "rb";
+            }
+            if (socket.OPEN) {
+                socket.send(JSON.stringify({
+                    "event": e,
+                    "data": {
+                        "alpha": alpha,
+                        "beta": beta,
+                        "gamma": gamma,
+                    }
+                }));
+            } else {
+                console.log("not open");
+            }
+        }
+
+        function fire() {
+            if (socket.OPEN) {
+                socket.send(JSON.stringify({
+                    "event": "fire",
+                    "data": {
+                        "alpha": alpha,
+                        "beta": beta,
+                        "gamma": gamma,
+                    }
+                }));
+            } else {
+                console.log("not open, fire");
+            }
+        }
+
+        function move(isLeft: boolean) {
+            if (socket.OPEN) {
+                socket.send(JSON.stringify({
+                    "event": isLeft ? "left" : "right",
+                    "data": {
+                        "alpha": alpha,
+                        "beta": beta,
+                        "gamma": gamma,
+                    }
+                }));
+            } else {
+                console.log("not open, move");
+            }
+        }
+
+        let eventCounter = 0;
+        button.addEventListener('click', function () {
+            button.setAttribute('disabled', "true");
+            if (socket.OPEN && !socket.CONNECTING) {
+                eventCounter = eventCounter + 1;
+                switch (eventCounter) {
+                    case 1:
+                        if (
+                            DeviceMotionEvent &&
+                            typeof DeviceMotionEvent.requestPermission === "function"
+                        ) {
+                            DeviceMotionEvent.requestPermission();
+                        }
+                        window.addEventListener("deviceorientation", handleOrientation);
+                        calibrate(eventCounter);
+                        break;
+                    case 2:
+                        calibrate(eventCounter);
+                        break;
+                    case 3:
+                        calibrate(eventCounter);
+                        break;
+                    case 4:
+                        calibrate(eventCounter);
+                        break;
+                    default:
+                        fire();
+                        break;
+                }
+            }
+            button.removeAttribute('disabled');
+        });
+
+        const leftBtn = document.getElementById('left')!;
+        leftBtn.addEventListener('click', function () {
+            leftBtn.setAttribute('disabled', "true");
+            if (socket.OPEN && !socket.CONNECTING) {
+                move(true);
+            }
+            leftBtn.removeAttribute('disabled');
+        });
+
+        const rightBtn = document.getElementById('right')!;
+        rightBtn.addEventListener('click', function () {
+            rightBtn.setAttribute('disabled', "true");
+            if (socket.OPEN && !socket.CONNECTING) {
+                move(false);
+            }
+            rightBtn.removeAttribute('disabled');
+        });
+    </script>
+</Layout>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        flex-direction: column;
+    }
+
+    h1 {
+        font-size: 2rem; /* 32px */
+        color: #333;
+        margin-bottom: 1.5rem;
+    }
+
+    .container {
+        text-align: center;
+        background-color: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 400px;
+    }
+
+    .idDisplay {
+        font-size: 1.25rem; /* 20px */
+        color: #555;
+        margin-bottom: 2rem;
+    }
+
+    .button {
+        font-size: 1.5rem; /* 24px */
+        padding: 2rem 4rem; /* Vertical padding is larger for better mobile display */
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        width: 100%;
+        height: 45vh; /* Button height set to 75% of the viewport height */
+    }
+
+
+    .button2 {
+        font-size: 1.5rem; /* 24px */
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        width: 45%;
+        height: 10vh; /* Button height set to 75% of the viewport height */
+    }
+
+
+    .button:focus {
+        background-color: #555;
+    }
+</style>
