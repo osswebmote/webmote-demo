@@ -4,4 +4,5 @@
 
 ## HOW TO BUILD
 
-1. build webpage
+1. build webpage (yarn astro build)
+2. build go (go build -o app ./)
