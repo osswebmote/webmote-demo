@@ -1,5 +1,7 @@
 # HOW TO BUILD
 
+[MANUAL-PDF](./manual.pdf)
+
 ## SERVER
 
 - 인증서 교체가 필요하다면 아래 optional 수행 필요
